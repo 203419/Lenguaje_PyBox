@@ -13,13 +13,14 @@ gramatica = {
     "PalabraFuncion": r"LT",
     "Parametros": r"<>",
     "DosPuntos": r":",
-    "Contenido": r".*$",
+    "Contenido": r".+$",
+   
+    "SaltoLinea": r"\n +",
 
     "PalabraCiclo": r"RT",
     "Operador": r"(>|<|>=|<=|==|!=)",
 
     "PalabraCondicion": r"RB",
-
     "PalabraMain": r"Start",
 }
 
@@ -44,7 +45,7 @@ def validar_var(cadena):
 
 
 def validar_func(cadena):
-    gramatica_pattern = re.compile(f"^{gramatica['PalabraFuncion']} {gramatica['Nombre']}{gramatica['Parametros']}{gramatica['DosPuntos']} {gramatica['Contenido']}$")
+    gramatica_pattern = re.compile(f"^{gramatica['PalabraFuncion']} {gramatica['Nombre']}{gramatica['Parametros']}{gramatica['DosPuntos']}({gramatica['SaltoLinea']}| {gramatica['Contenido']})+$")
     print(gramatica_pattern)
 
     if gramatica_pattern.match(cadena):
@@ -53,7 +54,7 @@ def validar_func(cadena):
 
 
 def validar_cic(cadena):
-    gramatica_pattern = re.compile(f"^{gramatica['PalabraCiclo']} {gramatica['Nombre']} {gramatica['Operador']} ({gramatica['Nombre']}|{gramatica['Entero']}|{gramatica['Booleano']}){gramatica['DosPuntos']} {gramatica['Contenido']}$")
+    gramatica_pattern = re.compile(f"^{gramatica['PalabraCiclo']} ({gramatica['Nombre']}|{gramatica['Entero']}|{gramatica['Booleano']}) {gramatica['Operador']} ({gramatica['Nombre']}|{gramatica['Entero']}|{gramatica['Booleano']}){gramatica['DosPuntos']}({gramatica['SaltoLinea']}| {gramatica['Contenido']})+$")
     print(gramatica_pattern)
 
     if gramatica_pattern.match(cadena):
@@ -62,7 +63,7 @@ def validar_cic(cadena):
 
 
 def validar_cond(cadena):
-    gramatica_pattern = re.compile(f"^{gramatica['PalabraCondicion']} ({gramatica['Nombre']}|{gramatica['Entero']}|{gramatica['Booleano']}) {gramatica['Operador']} ({gramatica['Nombre']}|{gramatica['Entero']}|{gramatica['Booleano']}){gramatica['DosPuntos']} {gramatica['Contenido']}$")
+    gramatica_pattern = re.compile(f"^{gramatica['PalabraCondicion']} ({gramatica['Nombre']}|{gramatica['Entero']}|{gramatica['Booleano']}) {gramatica['Operador']} ({gramatica['Nombre']}|{gramatica['Entero']}|{gramatica['Booleano']}){gramatica['DosPuntos']}({gramatica['SaltoLinea']}| {gramatica['Contenido']})+$")
     print(gramatica_pattern)
 
     if gramatica_pattern.match(cadena):
@@ -71,7 +72,7 @@ def validar_cond(cadena):
 
 
 def validar_main(cadena):
-    gramatica_pattern = re.compile(f"^{gramatica['PalabraMain']}{gramatica['DosPuntos']} {gramatica['Contenido']}$")
+    gramatica_pattern = re.compile(f"^{gramatica['PalabraMain']}{gramatica['DosPuntos']}({gramatica['SaltoLinea']}| {gramatica['Contenido']})+$")
     print(gramatica_pattern)
 
     if gramatica_pattern.match(cadena):
@@ -90,7 +91,7 @@ def validar_construccion(cadena):
     elif validar_main(cadena):
         return "La cadena es el main"
     else:
-        return "La cadena no coincide con ninguna construcción válida"
+        return "ERROR: La cadena no es válida"
     
 app = Flask(__name__)
 
@@ -100,9 +101,10 @@ def index():
 
 @app.route('/validar', methods=['POST'])
 def validar_cadena():
-    cadena = request.form['cadena']
-    resultado = validar_construccion(cadena)
-    return render_template('index.html', resultado=resultado)
+    data = request.get_json()
+    codigo = data['codigo']
+    resultado = validar_construccion(codigo)
+    return jsonify({"resultado": resultado})
 
 if __name__ == '__main__':
     app.run(debug=True)
